@@ -1,26 +1,31 @@
 ﻿namespace DataGridWithCommunityToolKit.ViewModels;
 
+#region Usings
+
 using System.Collections;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Windows.Data;
-using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using DataGridWithCommunityToolKit.Views;
 
+
+# endregion
+
 public partial class LinksListViewModel<T> : BaseViewModel
     where T : class
 {
+    #region Fields
     private readonly ObservableCollection<T> _items;
     private readonly ICollectionView _list;
-    private readonly int _max = 10000;
+    private readonly int _max = 10000; 
+    #endregion
 
+    #region CTOR
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     public LinksListViewModel(IMessenger messenger) : base(messenger)
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     {
         _items = new ObservableCollection<T>([]);
         _list = new InternalCollectionView<T>(this, _items)
@@ -28,13 +33,12 @@ public partial class LinksListViewModel<T> : BaseViewModel
             Filter = CreateStringFilter()
         };
     }
-
-    public LinksListView View
-    {
-        get; set;
-    }
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+    #endregion
 
     #region Properties
+
+    public LinksListView View { get; set; }
 
     public T? SelectedItem
     {
@@ -47,6 +51,8 @@ public partial class LinksListViewModel<T> : BaseViewModel
             List.MoveCurrentTo(value);
         }
     }
+
+    #region CTK Properties
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ToolTip))]
@@ -65,7 +71,6 @@ public partial class LinksListViewModel<T> : BaseViewModel
             return;
 
         _list.Filter = CreateStringFilter();
-        View.SelectAll();
     }
 
 #pragma warning disable MVVMTK0034 // Direct field reference to [ObservableProperty] backing field
@@ -83,6 +88,10 @@ public partial class LinksListViewModel<T> : BaseViewModel
 #pragma warning restore MVVMTK0034 // Direct field reference to [ObservableProperty] backing field
 
     #endregion
+
+    #endregion
+
+    #region CTK Commands
 
     [RelayCommand]
     private void Populate()
@@ -119,29 +128,31 @@ public partial class LinksListViewModel<T> : BaseViewModel
         }
     }
 
-
     [RelayCommand]
     private void RemoveSelectedItems()
     {
-        var index = View.SelectedIndex;
-        var itemsToRemove = View.GetSelectedItems<T>();
-        foreach (var item in itemsToRemove)
-            _items.Remove(item);
-
-        if (-1 != index)
+        try
         {
-            var newIndex = Math.Min( Math.Max(-1, _items.Count - 1), index);
-            View.SelectedIndex = newIndex;
-            OnPropertyChanged(nameof(SelectedItem));
+            var index = View.SelectedIndex;
+            var itemsToRemove = View.GetSelectedItems<T>();
+            foreach (var item in itemsToRemove)
+                _items.Remove(item);
+        }
+        catch (Exception ex)
+        {
+            LastException = ex;
         }
     }
 
-
     [RelayCommand]
-    private void SelectedAll()
+    private void SelectAll()
     {
         View.SelectAll();
     }
+
+    #endregion
+
+    #region Data
 
     public override Task<int> Reload(string? filter = null)
     {
@@ -201,4 +212,18 @@ public partial class LinksListViewModel<T> : BaseViewModel
         };
     }
 
+    #endregion
+
+    #region Overrides
+
+    protected override void OnPropertyChanged(PropertyChangedEventArgs e)
+    {
+        base.OnPropertyChanged(e);
+        if (e.PropertyName == nameof(IsLoaded) && isLoaded)
+        {
+            PopulateCommand.Execute(null);
+        }
+    }
+
+    #endregion
 }
