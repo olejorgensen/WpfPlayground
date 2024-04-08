@@ -8,5 +8,4 @@ public interface IFilteredListView<T>
     int SelectedIndex { get; set; }
     IList<T> GetSelectedItems();
     void SelectAll();
-    IFilteredListView<T> View { get; }
 }

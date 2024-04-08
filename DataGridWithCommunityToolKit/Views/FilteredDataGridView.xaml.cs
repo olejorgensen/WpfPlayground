@@ -72,10 +72,5 @@ namespace DataGridWithCommunityToolKit.Views
         }
 
         private FilteredDataGridViewModel<Uri> VM => (FilteredDataGridViewModel<Uri>)DataContext;
-
-        public IFilteredListView<Uri> View
-        {
-            get => this;
-        }
     }
 }
