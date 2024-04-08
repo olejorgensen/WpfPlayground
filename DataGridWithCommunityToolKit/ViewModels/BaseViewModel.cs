@@ -79,10 +79,10 @@ public abstract partial class BaseViewModel : ObservableObject
     {
         if (firstLoad || value)
         {
-            StatusMessage = "Please wait...";
-
             firstLoad = false;
-            await Reload().ConfigureAwait(false);
+            StatusMessage = "Please wait...";
+            await Reload();
+            StatusMessage = string.Empty;
         }
     }
 

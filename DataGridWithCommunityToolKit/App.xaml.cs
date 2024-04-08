@@ -46,6 +46,7 @@ public partial class App : PrismApplication
     protected override void ConfigureModuleCatalog(IModuleCatalog moduleCatalog)
     {
         moduleCatalog.AddModule<FilteredDataGridViewModule>();
+        moduleCatalog.AddModule<AnotherFilteredDataGridViewModule>();
 
     }
 }

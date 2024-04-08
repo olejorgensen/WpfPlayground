@@ -22,11 +22,13 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
     #region Fields
     private readonly ObservableCollection<T> _items;
     private readonly ICollectionView _list;
-    private readonly int _max = 10000; 
+    private Regex? _filterRegex = null;
     #endregion
 
     #region CTOR
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     public FilteredDataGridViewModel(IMessenger messenger) : base(messenger)
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     {
         _items = new ObservableCollection<T>([]);
         _list = new InternalCollectionView<T>(this, _items)
@@ -64,25 +66,31 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsFilterRegex))]
-    [NotifyPropertyChangedFor(nameof(FilterRegex))]
+    [NotifyCanExecuteChangedFor(nameof(RemoveFilteredItemsCommand))]
     private string filterText = string.Empty;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(FilterText))]
-    [NotifyPropertyChangedFor(nameof(FilterRegex))]
+    [NotifyCanExecuteChangedFor(nameof(RemoveFilteredItemsCommand))]
     private bool isFilterRegex = false;
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsFilterRegex))]
-    [NotifyPropertyChangedFor(nameof(FilterText))]
-    private Regex? filterRegex = null;
-
-    partial void OnFilterTextChanged(string? oldValue, string newValue)
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("CommunityToolkit.Mvvm.SourceGenerators.ObservablePropertyGenerator", "MVVMTK0034:Direct field reference to [ObservableProperty] backing field", Justification = "<Pending>")]
+    partial void OnFilterTextChanged(string newValue)
     {
-        if (string.Compare(oldValue ?? string.Empty, newValue, StringComparison.InvariantCultureIgnoreCase) == 0)
-            return;
+        if (isFilterRegex && TryCreateFilterRegex)
+        {
+            _list.Filter = CreateRegexFilter();
+        }
+        else
+        {
+            _list.Filter = CreateStringFilter();
+        }
+        OnPropertyChanged(nameof(List));
+    }
 
-        _list.Filter = CreateStringFilter();
+    partial void OnIsFilterRegexChanged(bool value)
+    {
+        OnFilterTextChanged(filterText);
     }
 
     public string ToolTipText
@@ -103,47 +111,60 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
 
     #region CTK Commands
 
-    [RelayCommand]
-    private async Task Populate()
+    public bool CanRemoveFilteredItems
+    {
+        get
+        {
+            return canReload && !string.IsNullOrEmpty(filterText);
+        }
+    }
+
+    [RelayCommand(CanExecute = nameof(CanRemoveFilteredItems))]
+    private void RemoveFilteredItems()
     {
         try
         {
-            await Reload();
+            if (string.IsNullOrEmpty(filterText)) return;
+
+            StatusMessage = "Removing filtered items...";
+
+            var itemsToRemove = ((InternalCollectionView<T>)_list).GetFilteredItems();
+            var oldCount = _items.Count;
+            if (itemsToRemove.Any())
+            {
+                foreach (var item in itemsToRemove)
+                    _items.Remove(item);
+
+                View.SelectedIndex = _items.Count - 1;
+            }
+
+            StatusMessage = string.Empty;
         }
         catch (Exception ex)
         {
-            LastException = ex;
+            LastException = new ApplicationException($"Filtered items could not be removed: {ex.Message}", ex);
         }
     }
 
-    [RelayCommand]
-    private void RemoveFilteredItems()
-    {
-        if (string.IsNullOrEmpty(filterText)) return;
-
-        var itemsToRemove = ((InternalCollectionView<T>)_list).GetFilteredItems();
-        if (itemsToRemove.Any())
-        {
-            foreach (var item in itemsToRemove)
-                _items.Remove(item);
-
-            FilterText = string.Empty;
-        }
-    }
-
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanReload))]
     private void RemoveSelectedItems()
     {
         try
         {
+            StatusMessage = "Removing selection...";
+
             var index = View.SelectedIndex;
             var itemsToRemove = View.GetSelectedItems();
             foreach (var item in itemsToRemove)
                 _items.Remove(item);
+
+            StatusMessage = string.Empty;
+
+            View.SelectedIndex = index;
         }
         catch (Exception ex)
         {
-            LastException = ex;
+            LastException = new ApplicationException($"Selected items could not be removed: {ex.Message}", ex);
         }
     }
 
@@ -151,6 +172,12 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
     private void SelectAll()
     {
         View.SelectAll();
+    }
+
+    [RelayCommand]
+    private void ToggleIsFilterRegex()
+    {
+        IsFilterRegex = !IsFilterRegex;
     }
 
     #endregion
@@ -171,19 +198,20 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
 
         try
         {
-            var newItems = CreateItemsHelper(_max);
+            var oldCount = _items.Count;
+            var max = (new Random(DateTime.Now.Second)).Next(1, 200);
+            var newItems = CreateItemsHelper(max);
             _items.AddRange
             (
                 newItems
             );
 
-            StatusMessage = string.Empty;
-
-            result = _max - _items.Count;
+            result = Math.Abs(oldCount - _items.Count);
+            StatusMessage = result == 0 ? "No changes..." : $"{result} new items found...";
         }
         catch (Exception ex)
         {
-            LastException = ex;
+            LastException = new ApplicationException($"Error when fetching data: {ex.Message}", ex);
         }
         finally
         {
@@ -214,7 +242,7 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
             base.OnPropertyChanged(args);
             if (args.PropertyName?.EndsWith("Count") == true)
             {
-                Owner.FilteredCount = this.Count;
+                Owner.FilteredCount = Math.Max(0, this.Count - 1);
                 Owner.ItemCount = this.SourceCollection.Cast<Y>().Count();
             }
         }
@@ -235,6 +263,17 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
         return newItems.Cast<T>().Where(l => !_items.Contains(l));
     }
 
+    private Predicate<object> CreateRegexFilter()
+    {
+        return (o) =>
+        {
+            if (o is Uri uri)
+                return _filterRegex.IsMatch(uri.AbsoluteUri) == true;
+            else
+                return false;
+        };
+    }
+
     private Predicate<object> CreateStringFilter()
     {
         return (o) =>
@@ -248,4 +287,29 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
 
     #endregion
 
+    #region Helpers
+
+    private bool TryCreateFilterRegex
+    {
+        get
+        {
+            var result = false;
+            try
+            {
+                var query = new Regex(filterText, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                _filterRegex = query;
+                StatusMessage = string.Empty;
+                result = true;
+            }
+            catch (Exception ex)
+            {
+                _filterRegex = null;
+                StatusMessage = ex.Message;
+                LastException = ex;
+            }
+            return result;
+        }
+    }
+
+    #endregion
 }

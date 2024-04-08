@@ -32,8 +32,8 @@ namespace DataGridWithCommunityToolKit.Views
             };
             filterTextBox.KeyUp += (o, e) =>
             {
-                if (e.Key == System.Windows.Input.Key.Escape)
-                    filterTextBox.Text = string.Empty;
+               if (e.Key == System.Windows.Input.Key.Delete && e.KeyStates == System.Windows.Input.KeyStates.Toggled)
+                    VM.FilterText = string.Empty;
             };
             dataGrid.SelectionUnit = DataGridSelectionUnit.FullRow;
 
@@ -61,7 +61,8 @@ namespace DataGridWithCommunityToolKit.Views
             {
                 try
                 {
-                    dataGrid.SelectedIndex = value;
+                    dataGrid.SelectedIndex = Math.Min(value, dataGrid.Items.Count - 1);
+                    dataGrid.Focus();
                 }
                 catch (Exception ex)
                 {

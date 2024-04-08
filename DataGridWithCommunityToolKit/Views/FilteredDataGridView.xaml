@@ -14,11 +14,13 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <ToolBarTray>
-            <ToolBar>
+            <ToolBar IsEnabled="{Binding CanReload}">
                 <Button Command="{Binding ReloadCommand}" Content="Reload" ToolTip="Reload" />
                 <Separator/>
                 <Label Content="🔎" />
                 <TextBox x:Name="filterTextBox" Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}" Width="100"/>
+                <RibbonCheckBox IsChecked="{Binding IsFilterRegex}" />
+                <Label Content="fn" FontStyle="Italic" FontSize="10" />
                 <Separator/>
                 <Button Command="{Binding RemoveFilteredItemsCommand}" Content="Remove filtered"/>
                 <Separator/>
