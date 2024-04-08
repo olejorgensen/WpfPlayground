@@ -7,6 +7,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Text.RegularExpressions;
 using System.Windows.Data;
+using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -25,7 +26,6 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
     #endregion
 
     #region CTOR
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     public FilteredDataGridViewModel(IMessenger messenger) : base(messenger)
     {
         _items = new ObservableCollection<T>([]);
@@ -34,7 +34,6 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
             Filter = CreateStringFilter()
         };
     }
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     #endregion
 
     #region Properties
@@ -86,7 +85,6 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
         _list.Filter = CreateStringFilter();
     }
 
-#pragma warning disable MVVMTK0034 // Direct field reference to [ObservableProperty] backing field
     public string ToolTipText
     {
         get
@@ -98,7 +96,6 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
                 : $"{filteredCount}/{itemCount}";
         }
     }
-#pragma warning restore MVVMTK0034 // Direct field reference to [ObservableProperty] backing field
 
     #endregion
 
@@ -107,15 +104,11 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
     #region CTK Commands
 
     [RelayCommand]
-    private void Populate()
+    private async Task Populate()
     {
         try
         {
-            var newItems = GetItems(_max);
-            _items.AddRange
-            (
-                newItems
-            );
+            await Reload();
         }
         catch (Exception ex)
         {
@@ -126,12 +119,9 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
     [RelayCommand]
     private void RemoveFilteredItems()
     {
-#pragma warning disable MVVMTK0034 // Direct field reference to [ObservableProperty] backing field
         if (string.IsNullOrEmpty(filterText)) return;
-#pragma warning restore MVVMTK0034 // Direct field reference to [ObservableProperty] backing field
 
         var itemsToRemove = ((InternalCollectionView<T>)_list).GetFilteredItems();
-
         if (itemsToRemove.Any())
         {
             foreach (var item in itemsToRemove)
@@ -167,9 +157,40 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
 
     #region Data
 
-    public override Task<int> Reload(string? filter = null)
+    protected override async Task<int> Reload()
     {
-        return DoNothing;
+        if (Dispatcher is not null && Dispatcher.CheckAccess() == false)
+        {
+            var dispatcherTask = await Dispatcher.InvokeAsync(Reload, DispatcherPriority.Background);
+            return await dispatcherTask;
+        }
+
+        CanReload = false;
+        StatusMessage = "Please wait...";
+        var result = -1;
+
+        try
+        {
+            var newItems = CreateItemsHelper(_max);
+            _items.AddRange
+            (
+                newItems
+            );
+
+            StatusMessage = string.Empty;
+
+            result = _max - _items.Count;
+        }
+        catch (Exception ex)
+        {
+            LastException = ex;
+        }
+        finally
+        {
+            CanReload = true;
+        }
+
+        return result;
     }
 
     /// <summary>
@@ -194,7 +215,7 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
             if (args.PropertyName?.EndsWith("Count") == true)
             {
                 Owner.FilteredCount = this.Count;
-                Owner.ItemCount = this.SourceCollection.Cast<T>().Count();
+                Owner.ItemCount = this.SourceCollection.Cast<Y>().Count();
             }
         }
 
@@ -204,7 +225,7 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
         }
     }
 
-    private IEnumerable<T> GetItems(int max)
+    private IEnumerable<T> CreateItemsHelper(int max)
     {
         var newItems = new List<Uri>(max);
         for (var i = 1; i <= max; i++)
@@ -227,16 +248,4 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
 
     #endregion
 
-    #region Overrides
-
-    protected override void OnPropertyChanged(PropertyChangedEventArgs e)
-    {
-        base.OnPropertyChanged(e);
-        if (e.PropertyName == nameof(IsLoaded) && isLoaded)
-        {
-            PopulateCommand.Execute(null);
-        }
-    }
-
-    #endregion
 }

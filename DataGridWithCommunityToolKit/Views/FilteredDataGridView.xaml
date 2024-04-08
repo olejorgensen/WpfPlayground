@@ -15,10 +15,10 @@
         </Grid.RowDefinitions>
         <ToolBarTray>
             <ToolBar>
-                <Button Command="{Binding PopulateCommand}" Content="Populate"/>
+                <Button Command="{Binding ReloadCommand}" Content="Reload" ToolTip="Reload" />
                 <Separator/>
-                <TextBox Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}" Width="100"/>
-                <Button Content="🛒" />
+                <Label Content="🔎" />
+                <TextBox x:Name="filterTextBox" Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}" Width="100"/>
                 <Separator/>
                 <Button Command="{Binding RemoveFilteredItemsCommand}" Content="Remove filtered"/>
                 <Separator/>
@@ -42,8 +42,13 @@
                 <DataGridTextColumn Binding="{Binding Query}" Header="Query" IsReadOnly="True" />
             </DataGrid.Columns>
         </DataGrid>
-        <StackPanel Orientation="Horizontal" Grid.Row="2">
-            <Label Content="{Binding ToolTipText}"/>
-        </StackPanel>
+        <StatusBar Grid.Row="2">
+            <StatusBarItem HorizontalAlignment="Stretch">
+                <Label Content="{Binding StatusMessage}"/>
+            </StatusBarItem>
+            <StatusBarItem HorizontalAlignment="Right">
+                <Label Content="{Binding ToolTipText}"/>
+            </StatusBarItem>
+        </StatusBar>
     </Grid>
 </UserControl>

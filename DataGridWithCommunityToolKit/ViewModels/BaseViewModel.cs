@@ -63,8 +63,11 @@ public abstract partial class BaseViewModel : ObservableObject
 
     public static readonly Task<int> DoNothing = Task.FromResult<int>(0);
 
-    [RelayCommand]
-    public abstract Task<int> Reload(string? filter = null);
+    [ObservableProperty]
+    protected bool canReload = true;
+
+    [RelayCommand(CanExecute = nameof(CanReload))]
+    protected abstract Task<int> Reload();
 
     #endregion Reload
 
@@ -76,8 +79,10 @@ public abstract partial class BaseViewModel : ObservableObject
     {
         if (firstLoad || value)
         {
+            StatusMessage = "Please wait...";
+
             firstLoad = false;
-            await Reload(null).ConfigureAwait(false);
+            await Reload().ConfigureAwait(false);
         }
     }
 

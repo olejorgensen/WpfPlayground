@@ -23,13 +23,18 @@ namespace DataGridWithCommunityToolKit.Views
             };
             Loaded += (o, e) =>
             {
+                filterTextBox.Focus();
                 VM.IsLoaded = true;
             };
             Unloaded += (o, e) =>
             {
                 VM.IsLoaded = false;
             };
-
+            filterTextBox.KeyUp += (o, e) =>
+            {
+                if (e.Key == System.Windows.Input.Key.Escape)
+                    filterTextBox.Text = string.Empty;
+            };
             dataGrid.SelectionUnit = DataGridSelectionUnit.FullRow;
 
             var vm = new FilteredDataGridViewModel<Uri>(messenger);
