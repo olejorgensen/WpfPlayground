@@ -9,7 +9,7 @@ namespace DataGridWithCommunityToolKit.Views
     /// <summary>
     /// Interaction logic for FilteredDataGridView.xaml
     /// </summary>
-    public partial class FilteredDataGridView: UserControl, IFilteredDataGridView<Uri>
+    public partial class FilteredDataGridView: UserControl, IFilteredListView<Uri>
     {
         public FilteredDataGridView(IMessenger messenger)
         {
@@ -33,7 +33,7 @@ namespace DataGridWithCommunityToolKit.Views
             filterTextBox.KeyUp += (o, e) =>
             {
                if (e.Key == System.Windows.Input.Key.Delete && e.KeyStates == System.Windows.Input.KeyStates.Toggled)
-                    VM.FilterText = string.Empty;
+                    VM.FilterText = string.Empty; // VM.ResetFilterRequested();messenger.Send(new ResetFilterRequestedMessage());
             };
             dataGrid.SelectionUnit = DataGridSelectionUnit.FullRow;
 
@@ -73,7 +73,7 @@ namespace DataGridWithCommunityToolKit.Views
 
         private FilteredDataGridViewModel<Uri> VM => (FilteredDataGridViewModel<Uri>)DataContext;
 
-        public IFilteredDataGridView<Uri> View
+        public IFilteredListView<Uri> View
         {
             get => this;
         }

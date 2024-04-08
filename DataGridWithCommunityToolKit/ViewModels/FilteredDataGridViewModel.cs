@@ -40,7 +40,7 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
 
     #region Properties
 
-    public IFilteredDataGridView<T> View { get; set; }
+    public IFilteredListView<T> View { get; set; }
 
     public T? SelectedItem
     {
