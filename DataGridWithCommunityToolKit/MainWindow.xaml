@@ -10,6 +10,6 @@
         ResizeMode="CanResizeWithGrip" WindowState="Maximized"
         Title="MainWindow" d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
-        <ContentControl rgn:RegionManager.RegionName="LinksListViewRegion"/>
+        <ContentControl rgn:RegionManager.RegionName="FilteredDataGridViewRegion"/>
     </Grid>
 </Window>

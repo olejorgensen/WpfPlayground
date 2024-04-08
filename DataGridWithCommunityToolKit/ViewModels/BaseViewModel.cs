@@ -61,13 +61,8 @@ public abstract partial class BaseViewModel : ObservableObject
 
     protected bool firstLoad = true;
 
-    protected bool isListDirty = true;
     public static readonly Task<int> DoNothing = Task.FromResult<int>(0);
 
-    /// <summary>
-    /// Default impl. that does nothing
-    /// </summary>
-    /// <returns></returns>
     [RelayCommand]
     public abstract Task<int> Reload(string? filter = null);
 
@@ -75,12 +70,13 @@ public abstract partial class BaseViewModel : ObservableObject
 
     #endregion
 
-    #region CommunityToolkit Events
+    #region CTK Events
 
     protected virtual async Task OnIsVisibleChangedInternal(bool value)
     {
         if (firstLoad || value)
         {
+            firstLoad = false;
             await Reload(null).ConfigureAwait(false);
         }
     }

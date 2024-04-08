@@ -1,15 +1,17 @@
 ﻿using System.Windows.Controls;
+using System.Linq;
+using System.Collections.Generic;
 using CommunityToolkit.Mvvm.Messaging;
 using DataGridWithCommunityToolKit.ViewModels;
 
 namespace DataGridWithCommunityToolKit.Views
 {
     /// <summary>
-    /// Interaction logic for LinksListView.xaml
+    /// Interaction logic for FilteredDataGridView.xaml
     /// </summary>
-    public partial class LinksListView : UserControl
+    public partial class FilteredDataGridView: UserControl, IFilteredDataGridView<Uri>
     {
-        public LinksListView(IMessenger messenger)
+        public FilteredDataGridView(IMessenger messenger)
         {
             InitializeComponent();
             IsVisibleChanged += (o, e) =>
@@ -30,15 +32,15 @@ namespace DataGridWithCommunityToolKit.Views
 
             dataGrid.SelectionUnit = DataGridSelectionUnit.FullRow;
 
-            var vm = new LinksListViewModel<Uri>(messenger);
+            var vm = new FilteredDataGridViewModel<Uri>(messenger);
             DataContext = vm;
             vm.Dispatcher = this.Dispatcher;
             vm.View = this;
         }
 
-        public List<T> GetSelectedItems<T>()
+        public IList<Uri> GetSelectedItems()
         {
-            var list = dataGrid.SelectedItems.Cast<T>().ToList();
+            var list = dataGrid.SelectedItems.Cast<Uri>().ToList();
             return list;
         }
 
@@ -49,10 +51,7 @@ namespace DataGridWithCommunityToolKit.Views
 
         public int SelectedIndex
         {
-            get
-            {
-                return dataGrid.SelectedIndex;
-            }
+            get => dataGrid.SelectedIndex;
             set
             {
                 try
@@ -66,12 +65,11 @@ namespace DataGridWithCommunityToolKit.Views
             }
         }
 
-        private LinksListViewModel<Uri> VM
+        private FilteredDataGridViewModel<Uri> VM => (FilteredDataGridViewModel<Uri>)DataContext;
+
+        public IFilteredDataGridView<Uri> View
         {
-            get
-            {
-                return (LinksListViewModel<Uri>)DataContext;
-            }
+            get => this;
         }
     }
 }

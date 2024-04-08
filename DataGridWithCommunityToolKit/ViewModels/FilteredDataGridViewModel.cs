@@ -5,6 +5,7 @@
 using System.Collections;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Text.RegularExpressions;
 using System.Windows.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -14,7 +15,7 @@ using DataGridWithCommunityToolKit.Views;
 
 # endregion
 
-public partial class LinksListViewModel<T> : BaseViewModel
+public partial class FilteredDataGridViewModel<T> : BaseViewModel
     where T : class
 {
     #region Fields
@@ -25,7 +26,7 @@ public partial class LinksListViewModel<T> : BaseViewModel
 
     #region CTOR
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    public LinksListViewModel(IMessenger messenger) : base(messenger)
+    public FilteredDataGridViewModel(IMessenger messenger) : base(messenger)
     {
         _items = new ObservableCollection<T>([]);
         _list = new InternalCollectionView<T>(this, _items)
@@ -38,7 +39,7 @@ public partial class LinksListViewModel<T> : BaseViewModel
 
     #region Properties
 
-    public LinksListView View { get; set; }
+    public IFilteredDataGridView<T> View { get; set; }
 
     public T? SelectedItem
     {
@@ -55,15 +56,27 @@ public partial class LinksListViewModel<T> : BaseViewModel
     #region CTK Properties
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ToolTip))]
+    [NotifyPropertyChangedFor(nameof(ToolTipText))]
     private int itemCount = 0;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ToolTip))]
+    [NotifyPropertyChangedFor(nameof(ToolTipText))]
     private int filteredCount = 0;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsFilterRegex))]
+    [NotifyPropertyChangedFor(nameof(FilterRegex))]
     private string filterText = string.Empty;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(FilterText))]
+    [NotifyPropertyChangedFor(nameof(FilterRegex))]
+    private bool isFilterRegex = false;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsFilterRegex))]
+    [NotifyPropertyChangedFor(nameof(FilterText))]
+    private Regex? filterRegex = null;
 
     partial void OnFilterTextChanged(string? oldValue, string newValue)
     {
@@ -74,7 +87,7 @@ public partial class LinksListViewModel<T> : BaseViewModel
     }
 
 #pragma warning disable MVVMTK0034 // Direct field reference to [ObservableProperty] backing field
-    public string ToolTip
+    public string ToolTipText
     {
         get
         {
@@ -134,7 +147,7 @@ public partial class LinksListViewModel<T> : BaseViewModel
         try
         {
             var index = View.SelectedIndex;
-            var itemsToRemove = View.GetSelectedItems<T>();
+            var itemsToRemove = View.GetSelectedItems();
             foreach (var item in itemsToRemove)
                 _items.Remove(item);
         }
@@ -170,10 +183,10 @@ public partial class LinksListViewModel<T> : BaseViewModel
         }
     }
 
-    public class InternalCollectionView<Y>(LinksListViewModel<Y> owner, IList list) : ListCollectionView(list), ICollectionView
+    public class InternalCollectionView<Y>(FilteredDataGridViewModel<Y> owner, IList list) : ListCollectionView(list), ICollectionView
         where Y : class
     {
-        public LinksListViewModel<Y> Owner { get; } = owner;
+        public FilteredDataGridViewModel<Y> Owner { get; } = owner;
 
         protected override void OnPropertyChanged(PropertyChangedEventArgs args)
         {
