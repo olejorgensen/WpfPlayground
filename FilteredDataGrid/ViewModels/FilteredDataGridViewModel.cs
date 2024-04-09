@@ -171,13 +171,15 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
             StatusMessage = "Removing filtered items...";
 
             var itemsToRemove = ((InternalCollectionView<T>)_list).GetFilteredItems();
-            var oldCount = _items.Count;
+            var oldIndex = View.SelectedIndex;
             if (itemsToRemove.Any())
             {
                 foreach (var item in itemsToRemove)
                     _items.Remove(item);
 
-                View.SelectedIndex = _items.Count - 1;
+                CanReload = true;
+                View.SelectedIndex = -1;
+                View.SelectedIndex = oldIndex;
             }
 
             StatusMessage = string.Empty;
@@ -189,6 +191,7 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
         finally
         {
             CanReload = true;
+            RemoveSelectedItemsCommand.NotifyCanExecuteChanged();
         }
     }
 
@@ -214,8 +217,11 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
             foreach (var item in itemsToRemove)
                 _items.Remove(item);
 
+            CanReload = true;
+
             StatusMessage = string.Empty;
 
+            View.SelectedIndex = -1;
             View.SelectedIndex = index;
         }
         catch (Exception ex)
@@ -267,7 +273,9 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
             );
 
             result = Math.Abs(oldCount - _items.Count);
+
             StatusMessage = result == 0 ? "No changes..." : $"{result} new items found...";
+
         }
         catch (Exception ex)
         {
@@ -276,6 +284,9 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
         finally
         {
             CanReload = true;
+
+            RemoveFilteredItemsCommand.NotifyCanExecuteChanged();
+            RemoveSelectedItemsCommand.NotifyCanExecuteChanged();
         }
 
         return result;
