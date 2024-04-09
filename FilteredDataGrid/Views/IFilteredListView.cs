@@ -7,5 +7,6 @@ public interface IFilteredListView<T>
 {
     int SelectedIndex { get; set; }
     IList<T> GetSelectedItems();
+    int SelectedItemsCount { get; }
     void SelectAll();
 }

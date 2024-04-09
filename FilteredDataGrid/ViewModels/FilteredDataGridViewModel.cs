@@ -2,6 +2,7 @@
 
 #region Usings
 using System.Collections;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Text.RegularExpressions;
@@ -62,6 +63,7 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ToolTipText))]
+    [NotifyCanExecuteChangedFor(nameof(RemoveFilteredItemsCommand))]
     private int filteredCount = 0;
 
     [ObservableProperty]
@@ -78,6 +80,38 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
     [NotifyPropertyChangedFor(nameof(FilterText))]
     [NotifyCanExecuteChangedFor(nameof(RemoveFilteredItemsCommand))]
     private Regex filterRegex = new(".");
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(RemoveSelectedItemsCommand))]
+    private int selectedItemsCount = 0;
+
+    private string _selectedExpression = string.Empty;
+    public string SelectedExpression
+    {
+        get => _selectedExpression;
+        set
+        {
+            try
+            {
+                if (SetProperty(ref _selectedExpression, value, nameof(SelectedExpression)))
+                {
+                    var query = new Regex(value, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                    IsFilterRegex = true;
+                    FilterText = value;
+                    FilterRegex = query;
+                    _selectedExpression = value;
+                }
+            }
+            catch (Exception ex)
+            {
+                LastException = ex;
+                IsFilterRegex = false;
+                FilterText = value;
+                FilterRegex = new(".");
+                _selectedExpression = value;
+            }
+        }
+    }
 
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("CommunityToolkit.Mvvm.SourceGenerators.ObservablePropertyGenerator", "MVVMTK0034:Direct field reference to [ObservableProperty] backing field", Justification = "<Pending>")]
@@ -128,6 +162,8 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
     [RelayCommand(CanExecute = nameof(CanRemoveFilteredItems))]
     private void RemoveFilteredItems()
     {
+        CanReload = false;
+
         try
         {
             if (string.IsNullOrEmpty(filterText)) return;
@@ -150,11 +186,25 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
         {
             LastException = new ApplicationException($"Filtered items could not be removed: {ex.Message}", ex);
         }
+        finally
+        {
+            CanReload = true;
+        }
     }
 
-    [RelayCommand(CanExecute = nameof(CanReload))]
+    public bool CanRemoveSelectedItems
+    {
+        get
+        {
+            return canReload && View.SelectedItemsCount > 0;
+        }
+    }
+
+    [RelayCommand(CanExecute = nameof(CanRemoveSelectedItems))]
     private void RemoveSelectedItems()
     {
+        CanReload = true;
+
         try
         {
             StatusMessage = "Removing selection...";
@@ -171,6 +221,10 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
         catch (Exception ex)
         {
             LastException = new ApplicationException($"Selected items could not be removed: {ex.Message}", ex);
+        }
+        finally
+        {
+            CanReload = false;
         }
     }
 

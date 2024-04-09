@@ -49,6 +49,14 @@ public partial class FilteredDataGridView: UserControl, IFilteredListView<Uri>
         return list;
     }
 
+    public int SelectedItemsCount
+    {
+        get
+        {
+            return dataGrid.SelectedItems.Count;
+        }
+    }
+
     public void SelectAll()
     {
         dataGrid.SelectAll();
@@ -72,4 +80,9 @@ public partial class FilteredDataGridView: UserControl, IFilteredListView<Uri>
     }
 
     private FilteredDataGridViewModel<Uri> VM => (FilteredDataGridViewModel<Uri>)DataContext;
+
+    private void dataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        VM.SelectedItemsCount = this.SelectedItemsCount;
+    }
 }
