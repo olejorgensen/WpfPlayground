@@ -113,7 +113,6 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
         }
     }
 
-
     [System.Diagnostics.CodeAnalysis.SuppressMessage("CommunityToolkit.Mvvm.SourceGenerators.ObservablePropertyGenerator", "MVVMTK0034:Direct field reference to [ObservableProperty] backing field", Justification = "<Pending>")]
     partial void OnFilterTextChanged(string value)
     {
@@ -172,7 +171,7 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
 
             var itemsToRemove = ((InternalCollectionView<T>)_list).GetFilteredItems();
             var oldIndex = View.SelectedIndex;
-            if (itemsToRemove.Any())
+            if (itemsToRemove.Count > 0)
             {
                 foreach (var item in itemsToRemove)
                     _items.Remove(item);

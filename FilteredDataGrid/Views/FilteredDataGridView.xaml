@@ -20,11 +20,11 @@
             <ToolBar IsEnabled="{Binding CanReload}">
                 <Button Command="{Binding ReloadCommand}" Content="Reload" ToolTip="Reload" />
                 <Separator/>
-                <Label Content="🔎" />
+                <Label Content="🔎" Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" />
                 <TextBox x:Name="filterTextBox" Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}" Width="100"/>
                 <RibbonCheckBox IsChecked="{Binding IsFilterRegex}" />
-                <TextBox x:Name="regexTextBox" IsReadOnly="True" Text="{Binding FilterRegex, Mode=OneWay}" Width="100"/>
-                <Label Content="fn" FontStyle="Italic" FontSize="10" />
+                <!--<TextBox x:Name="regexTextBox" IsReadOnly="True" Text="{Binding FilterRegex, Mode=OneWay}" Width="100"/>-->
+                <Label Content="fn" FontStyle="Italic" FontSize="10" ToolTip="Is Regular Expression"/>
                 <Separator/>
                 <Button Command="{Binding RemoveFilteredItemsCommand}" Content="Remove filtered"/>
                 <Separator/>
