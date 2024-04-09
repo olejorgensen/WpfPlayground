@@ -203,7 +203,7 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
     [RelayCommand(CanExecute = nameof(CanRemoveSelectedItems))]
     private void RemoveSelectedItems()
     {
-        CanReload = true;
+        CanReload = false;
 
         try
         {
@@ -224,7 +224,7 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
         }
         finally
         {
-            CanReload = false;
+            CanReload = true;
         }
     }
 
