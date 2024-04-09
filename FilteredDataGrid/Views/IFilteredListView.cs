@@ -1,4 +1,4 @@
-﻿namespace DataGridWithCommunityToolKit.Views;
+﻿namespace FilteredDataGrid.Views;
 
 using System.Collections.Generic;
 

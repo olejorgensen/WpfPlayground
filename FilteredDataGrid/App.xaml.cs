@@ -1,12 +1,12 @@
-﻿using System.Windows;
+﻿namespace FilteredDataGrid;
+
+using System.Windows;
 using CommunityToolkit.Mvvm.Messaging;
-using DataGridWithCommunityToolKit.Modules;
+using FilteredDataGrid.Modules;
 using Prism.Ioc;
 using Prism.Modularity;
 using Prism.Regions;
 using Prism.Unity;
-
-namespace DataGridWithCommunityToolKit;
 
 /// <summary>
 /// Interaction logic for App.xaml
@@ -39,7 +39,7 @@ public partial class App : PrismApplication
 
     protected override IModuleCatalog CreateModuleCatalog()
     {
-        var compiledPath = @"C:\dev\WpfPlayground\DataGridWithCommunityToolKit\Modules\";
+        var compiledPath = @"C:\dev\WpfPlayground\FilteredDataGrid\Modules\";
         return new DirectoryModuleCatalog() { ModulePath = compiledPath };
     }
 

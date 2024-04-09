@@ -1,7 +1,6 @@
-﻿namespace DataGridWithCommunityToolKit.ViewModels;
+﻿namespace FilteredDataGrid.ViewModels;
 
 #region Usings
-
 using System.Collections;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -11,9 +10,7 @@ using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using DataGridWithCommunityToolKit.Views;
-
-
+using FilteredDataGrid.Views;
 # endregion
 
 public partial class FilteredDataGridViewModel<T> : BaseViewModel
@@ -22,7 +19,6 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
     #region Fields
     private readonly ObservableCollection<T> _items;
     private readonly ICollectionView _list;
-    private Regex? _filterRegex = null;
     #endregion
 
     #region CTOR
@@ -44,13 +40,17 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
 
     public T? SelectedItem
     {
-        get
-        {
-            return (T)List.CurrentItem;
-        }
+        get => (T)_list.CurrentItem;
         set
         {
-            List.MoveCurrentTo(value);
+            try
+            {
+                _list.MoveCurrentTo(value);
+            }
+            catch (Exception ex)
+            {
+                LastException = ex;
+            }
         }
     }
 
@@ -74,8 +74,14 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
     [NotifyCanExecuteChangedFor(nameof(RemoveFilteredItemsCommand))]
     private bool isFilterRegex = false;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(FilterText))]
+    [NotifyCanExecuteChangedFor(nameof(RemoveFilteredItemsCommand))]
+    private Regex filterRegex = new(".");
+
+
     [System.Diagnostics.CodeAnalysis.SuppressMessage("CommunityToolkit.Mvvm.SourceGenerators.ObservablePropertyGenerator", "MVVMTK0034:Direct field reference to [ObservableProperty] backing field", Justification = "<Pending>")]
-    partial void OnFilterTextChanged(string newValue)
+    partial void OnFilterTextChanged(string value)
     {
         if (isFilterRegex && TryCreateFilterRegex)
         {
@@ -253,12 +259,12 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
         }
     }
 
-    private IEnumerable<T> CreateItemsHelper(int max)
+    private IEnumerable<T> CreateItemsHelper(int maxDays)
     {
-        var newItems = new List<Uri>(max);
-        for (var i = 1; i <= max; i++)
+        var newItems = new List<Uri>(maxDays);
+        for (var i = 1; i <= maxDays; i++)
         {
-            newItems.Add(new Uri($"https://item{i}.com/item{i}/?q={i}"));
+            newItems.Add(new Uri($"https://inventory.com/items?days={i}"));
         }
         return newItems.Cast<T>().Where(l => !_items.Contains(l));
     }
@@ -268,7 +274,7 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
         return (o) =>
         {
             if (o is Uri uri)
-                return _filterRegex.IsMatch(uri.AbsoluteUri) == true;
+                return filterRegex.IsMatch(uri.AbsoluteUri) == true;
             else
                 return false;
         };
@@ -297,13 +303,12 @@ public partial class FilteredDataGridViewModel<T> : BaseViewModel
             try
             {
                 var query = new Regex(filterText, RegexOptions.Compiled | RegexOptions.IgnoreCase);
-                _filterRegex = query;
+                filterRegex = query;
                 StatusMessage = string.Empty;
                 result = true;
             }
             catch (Exception ex)
             {
-                _filterRegex = null;
                 StatusMessage = ex.Message;
                 LastException = ex;
             }

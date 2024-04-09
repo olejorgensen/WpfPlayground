@@ -1,7 +1,7 @@
-﻿using Prism.Ioc;
-using Prism.Modularity;
+﻿namespace FilteredDataGrid.Modules;
 
-namespace DataGridWithCommunityToolKit.Modules;
+using Prism.Ioc;
+using Prism.Modularity;
 
 public abstract class BaseModule : IModule
 {

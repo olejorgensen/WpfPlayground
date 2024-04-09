@@ -1,11 +1,13 @@
-﻿<UserControl x:Class="DataGridWithCommunityToolKit.Views.FilteredDataGridView"
+﻿<UserControl x:Class="FilteredDataGrid.Views.FilteredDataGridView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:viewmodels="clr-namespace:DataGridWithCommunityToolKit.ViewModels"
+             xmlns:viewmodels="clr-namespace:FilteredDataGrid.ViewModels"
              xmlns:prism="http://prismlibrary.com/"
              mc:Ignorable="d" 
+             prism:ViewModelLocator.AutoWireViewModel="True"
+             d:DataContext="{d:DesignInstance Type=viewmodels:FilteredDataGridViewModel}"
              d:DesignHeight="400" d:DesignWidth="623">
     <Grid>
         <Grid.RowDefinitions>
@@ -20,6 +22,7 @@
                 <Label Content="🔎" />
                 <TextBox x:Name="filterTextBox" Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}" Width="100"/>
                 <RibbonCheckBox IsChecked="{Binding IsFilterRegex}" />
+                <TextBox x:Name="regexTextBox" Text="{Binding FilterRegex}" Width="100"/>
                 <Label Content="fn" FontStyle="Italic" FontSize="10" />
                 <Separator/>
                 <Button Command="{Binding RemoveFilteredItemsCommand}" Content="Remove filtered"/>
@@ -34,9 +37,9 @@
                   ItemsSource="{Binding List}"
                   IsSynchronizedWithCurrentItem="True"
                   SelectedItem="{Binding SelectedItem}"
+                  SelectionUnit="FullRow"
                   ClipboardCopyMode="None"
                   AlternationCount="1"
-                  SelectionUnit="FullRow"
                   AlternatingRowBackground="{DynamicResource {x:Static SystemColors.ControlLightBrushKey}}">
             <DataGrid.Columns>
                 <DataGridTextColumn Binding="{Binding Host}" Header="Host" IsReadOnly="True" Width="100"/>

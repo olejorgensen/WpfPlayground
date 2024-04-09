@@ -1,8 +1,9 @@
-﻿using DataGridWithCommunityToolKit.Views;
+﻿namespace FilteredDataGrid.Modules;
+
+using FilteredDataGrid.Views;
 using Prism.Ioc;
 using Prism.Regions;
 
-namespace DataGridWithCommunityToolKit.Modules;
 public class FilteredDataGridViewModule : BaseModule
 {
     public override void OnInitialized(IContainerProvider containerProvider)

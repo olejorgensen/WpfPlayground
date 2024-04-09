@@ -1,4 +1,4 @@
-﻿namespace DataGridWithCommunityToolKit.ViewModels;
+﻿namespace FilteredDataGrid.ViewModels;
 
 #region Usings
 using System;

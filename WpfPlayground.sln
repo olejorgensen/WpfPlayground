@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33020.496
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DragAndDrop", "DragAndDrop.csproj", "{C2BB174B-76E1-488D-8930-059D0B108AC1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DragAndDrop", "DragAndDrop\DragAndDrop.csproj", "{C2BB174B-76E1-488D-8930-059D0B108AC1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataGridWithCommunityToolKit", "DataGridWithCommunityToolKit\DataGridWithCommunityToolKit.csproj", "{23C61F98-026A-4C17-91B7-73337083ACDA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FilteredDataGrid", "FilteredDataGrid\FilteredDataGrid.csproj", "{23C61F98-026A-4C17-91B7-73337083ACDA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
