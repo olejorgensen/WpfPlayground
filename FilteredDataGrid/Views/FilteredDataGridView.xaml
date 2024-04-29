@@ -5,8 +5,8 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:converters="clr-namespace:FilteredDataGrid.Converters"
              xmlns:prism="http://prismlibrary.com/"
-             mc:Ignorable="d" 
-             d:DesignHeight="400" d:DesignWidth="623">
+             mc:Ignorable="d"
+             d:DesignHeight="400" d:DesignWidth="630">
     <UserControl.Resources>
         <converters:ComboBoxItemTagToStringConverter x:Key="ComboBoxItemTagToStringConverter" />
     </UserControl.Resources>
@@ -34,9 +34,9 @@
                 <ComboBox x:Name="daysComboBox" SelectedValue="{Binding SelectedExpression, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource ComboBoxItemTagToStringConverter}}">
                     <ComboBoxItem IsSelected="True" Tag=".">[Select]</ComboBoxItem>
                     <ComboBoxItem Tag="days=\d{1}$">&lt;10</ComboBoxItem>
-                    <ComboBoxItem Tag="days=1\d{1}$">&lt;20</ComboBoxItem>
-                    <ComboBoxItem Tag="days=[12]\d{1}$">&lt;30</ComboBoxItem>
-                    <ComboBoxItem Tag="days=[1-8]\d{1}$">&lt;90</ComboBoxItem>
+                    <ComboBoxItem Tag="days=1?\d{1}$">&lt;20</ComboBoxItem>
+                    <ComboBoxItem Tag="days=[12]?\d{1}$">&lt;30</ComboBoxItem>
+                    <ComboBoxItem Tag="days=[1-9]?\d{1}$">&lt;90</ComboBoxItem>
                     <ComboBoxItem Tag="days=(9\d+|\d{3,})">+90</ComboBoxItem>
                 </ComboBox>
                 <Label>days</Label>
@@ -52,10 +52,10 @@
                   SelectionUnit="FullRow"
                   ClipboardCopyMode="None"
                   AlternationCount="1"
-                  AlternatingRowBackground="{DynamicResource {x:Static SystemColors.ControlLightBrushKey}}" SelectionChanged="dataGrid_SelectionChanged">
+                  AlternatingRowBackground="{DynamicResource {x:Static SystemColors.ControlLightBrushKey}}" SelectionChanged="OnDataGridSelectionChanged">
             <DataGrid.Columns>
                 <DataGridTextColumn Binding="{Binding Host}" Header="Host" IsReadOnly="True" Width="100"/>
-                <DataGridTextColumn Binding="{Binding AbsolutePath}" Header="Path" IsReadOnly="True" Width="180"/>
+                <DataGridTextColumn Binding="{Binding Path}" Header="Path" IsReadOnly="True" Width="180"/>
                 <DataGridTextColumn Binding="{Binding Query}" Header="Query" IsReadOnly="True" />
             </DataGrid.Columns>
         </DataGrid>

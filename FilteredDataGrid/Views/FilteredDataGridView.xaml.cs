@@ -5,15 +5,25 @@ using System.Linq;
 using System.Collections.Generic;
 using CommunityToolkit.Mvvm.Messaging;
 using FilteredDataGrid.ViewModels;
+using System.Windows;
 
 /// <summary>
 /// Interaction logic for FilteredDataGridView.xaml
 /// </summary>
 public partial class FilteredDataGridView: UserControl, IFilteredListView<Uri>
 {
+    #region Constructor
+
     public FilteredDataGridView(IMessenger messenger)
     {
         InitializeComponent();
+
+        var vm = new FilteredDataGridViewModel<Uri>(messenger);
+        vm.Dispatcher = this.Dispatcher;
+        vm.View = this;
+
+        DataContext = vm;
+
         IsVisibleChanged += (o, e) =>
         {
             if (e.NewValue is bool isVisible)
@@ -21,27 +31,14 @@ public partial class FilteredDataGridView: UserControl, IFilteredListView<Uri>
                 VM.IsVisible = isVisible;
             }
         };
-        Loaded += (o, e) =>
-        {
-            filterTextBox.Focus();
-            VM.IsLoaded = true;
-        };
-        Unloaded += (o, e) =>
-        {
-            VM.IsLoaded = false;
-        };
-        filterTextBox.KeyUp += (o, e) =>
-        {
-           if (e.Key == System.Windows.Input.Key.Delete && e.KeyStates == System.Windows.Input.KeyStates.Toggled)
-                VM.FilterText = string.Empty; // VM.ResetFilterRequested();messenger.Send(new ResetFilterRequestedMessage());
-        };
+        Loaded += OnLoaded;
+        Unloaded += OnUnloaded;
         dataGrid.SelectionUnit = DataGridSelectionUnit.FullRow;
+    } 
 
-        var vm = new FilteredDataGridViewModel<Uri>(messenger);
-        DataContext = vm;
-        vm.Dispatcher = this.Dispatcher;
-        vm.View = this;
-    }
+    #endregion
+
+    #region IFilteredListView<Uri>
 
     public IList<Uri> GetSelectedItems()
     {
@@ -69,7 +66,7 @@ public partial class FilteredDataGridView: UserControl, IFilteredListView<Uri>
         {
             try
             {
-                dataGrid.SelectedIndex = Math.Min(value, dataGrid.Items.Count - 1);
+                dataGrid.SelectedIndex = Math.Clamp(value, -1, dataGrid.Items.Count - 1);
                 dataGrid.Focus();
             }
             catch (Exception ex)
@@ -79,10 +76,82 @@ public partial class FilteredDataGridView: UserControl, IFilteredListView<Uri>
         }
     }
 
+    #endregion
+
+    #region Helpers
+
     private FilteredDataGridViewModel<Uri> VM => (FilteredDataGridViewModel<Uri>)DataContext;
 
-    private void dataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    #endregion
+
+    #region UI Events
+
+    private void Register()
     {
-        VM.SelectedItemsCount = this.SelectedItemsCount;
+        Unregister();
+        dataGrid.SelectionChanged += OnDataGridSelectionChanged;
+        filterTextBox.KeyUp += OnFilterTextKeyUp;
     }
+
+    private void Unregister()
+    {
+        dataGrid.SelectionChanged -= OnDataGridSelectionChanged;
+        filterTextBox.KeyUp -= OnFilterTextKeyUp;
+    }
+
+    private void OnLoaded(object o, RoutedEventArgs e)
+    {
+        try
+        {
+            Register();
+            filterTextBox.Focus();
+            VM.IsLoaded = true;
+        }
+        catch (Exception ex)
+        {
+            VM.LastException = ex;
+        }
+    }
+
+    private void OnUnloaded(object o, RoutedEventArgs e)
+    {
+        try
+        {
+            Unregister();
+            VM.IsLoaded = false;
+        }
+        catch (Exception ex)
+        {
+            VM.LastException = ex;
+        }
+    }
+
+    private void OnDataGridSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        try
+        {
+            VM.SelectedItemsCount = this.SelectedItemsCount;
+        }
+        catch (Exception ex)
+        {
+            VM.LastException = ex;
+        }
+    }
+
+    private void OnFilterTextKeyUp(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        try
+        {
+            if (e.Key == System.Windows.Input.Key.Delete && e.KeyStates == System.Windows.Input.KeyStates.Toggled)
+            {
+                VM.FilterText = string.Empty;
+            }
+        }
+        catch (Exception ex)
+        {
+            VM.LastException = ex;
+        }
+    } 
+
+    #endregion
 }
