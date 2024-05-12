@@ -11,14 +11,14 @@ namespace WpfPlayground
             TextDataFormat.Text
         };
 
-        public static (IHtmlDocumentContent? Contents, Exception? Error) GetHtmlDocumentContent(DataObject? dataObject)
+        public static (HtmlDocument? Contents, Exception? Error) GetHtmlDocumentContent(DataObject? dataObject)
         {
-            (IHtmlDocumentContent? Contents, Exception? Error) result = (null, null);
+            (HtmllDocument? Contents, Exception? Error) result = (null, null);
             try
             {
                 if (dataObject?.GetText(TextDataFormat.Html) is string htmlString && !string.IsNullOrWhiteSpace(htmlString))
                 {
-                    result.Contents = HtmlTextProvider.TryGetHtmlDocumentContent(htmlString);
+                    result.Contents = HtmlTextProvider.GetHtmlDocument(htmlString);
                 }
             }
             catch (Exception ex)
@@ -58,23 +58,16 @@ namespace WpfPlayground
             return baseUri;
         }
 
-        public static HtmlDocument? TryGetHtmlDocumentContent(string htmlData)
+        public static HtmlDocument? GetHtmlDocument(string htmlData)
         {
-            HtmlDocument? result = null;
-            try
-            {
-                var startHtmlIndex = int.Parse(StartHtml().Match(htmlData).Groups[1].Value);
-                //var endHtmlIndex = int.Parse(Regex.Match(htmlData, @"EndHTML:(\d+)").Groups[1].Value);
-                var baseUri = new Uri(SourceUrl().Match(htmlData).Groups[1].Value.Trim());
-                var html = htmlData.Substring(startHtmlIndex);
+            var startHtmlIndex = int.Parse(StartHtml().Match(htmlData).Groups[1].Value);
+            //var endHtmlIndex = int.Parse(Regex.Match(htmlData, @"EndHTML:(\d+)").Groups[1].Value);
+            var baseUri = new Uri(SourceUrl().Match(htmlData).Groups[1].Value.Trim());
+            var html = htmlData.Substring(startHtmlIndex);
 
-                var result = new HtmlDocument();
-                result.LoadHtml(html);
-            }
-            catch
-            {
-                // ignore
-            }
+            var result = new HtmlDocument();
+            result.LoadHtml(html);
+
             return result;
         }
 
