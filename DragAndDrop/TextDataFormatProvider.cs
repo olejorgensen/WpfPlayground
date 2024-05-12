@@ -42,31 +42,46 @@ namespace WpfPlayground
         }
     }
 
-    public static class HtmlTextProvider
+    /// <summary>
+    /// Version: 0.9
+    /// StartHTML: 0000000148
+    /// EndHTML: 0000009764
+    /// StartFragment: 0000000184
+    /// EndFragment: 0000009728
+    /// SourceURL: https://xyz.com/thebaseurl/
+    /// </summary>
+    public static partial class HtmlTextProvider
     {
         public static Uri? GetBaseUri(string htmlData)
         {
-            var baseUri = new Uri(Regex.Match(htmlData, @"SourceURL:(.+)\n").Groups[1].Value.Trim());
+            var baseUri = new Uri(SourceUrl().Match(htmlData).Groups[1].Value.Trim());
             return baseUri;
         }
 
-        public static IHtmlDocumentContent? TryGetHtmlDocumentContent(string htmlData)
+        public static HtmlDocument? TryGetHtmlDocumentContent(string htmlData)
         {
-            var startHtmlIndex = int.Parse(Regex.Match(htmlData, @"StartHTML:(\d+)").Groups[1].Value);
-            //var endHtmlIndex = int.Parse(Regex.Match(htmlData, @"EndHTML:(\d+)").Groups[1].Value);
-            var baseUri = new Uri(Regex.Match(htmlData, @"SourceURL:(.+)\n").Groups[1].Value.Trim());
-            var html = htmlData.Substring(startHtmlIndex);
-
-            var doc = new HtmlDocument();
-            doc.LoadHtml(html);
-
-            var service = new HtmlDocumentContentService
+            HtmlDocument? result = null;
+            try
             {
-                Document = doc,
-                BaseUri = baseUri
-            };
+                var startHtmlIndex = int.Parse(StartHtml().Match(htmlData).Groups[1].Value);
+                //var endHtmlIndex = int.Parse(Regex.Match(htmlData, @"EndHTML:(\d+)").Groups[1].Value);
+                var baseUri = new Uri(SourceUrl().Match(htmlData).Groups[1].Value.Trim());
+                var html = htmlData.Substring(startHtmlIndex);
 
-            return service.GetContents();
+                var result = new HtmlDocument();
+                result.LoadHtml(html);
+            }
+            catch
+            {
+                // ignore
+            }
+            return result;
         }
+
+        [GeneratedRegex(@"SourceURL:(.+)\n")]
+        private static partial Regex SourceUrl();
+
+        [GeneratedRegex(@"StartHTML:(\d+)")]
+        private static partial Regex StartHtml();
     }
 }
